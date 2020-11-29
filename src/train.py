@@ -1,10 +1,16 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+import torch
 import argparse
 from torch.utils.data import DataLoader
+from torch import nn, optim
 
 from dataset_builder import TrainDataset, TestDataset
+from trainer import Trainer
+
+# import model
+from model.three_layer_conv_net import three_layer_conv_net
 
 parser = argparse.ArgumentParser()
 
@@ -34,6 +40,37 @@ args = parser.parse_args()
 if not os.path.isdir(args.model_dir) :
     os.makedirs(args.model_dir)
 
+# DataLoader 생성을 위한 collate_fn
+def collate_fn(batch) :
+    image = [x['image'] for x in batch]
+    label = [x['label'] for x in batch]
+
+    return torch.tensor(image).float().cuda(), torch.tensor(label).long().cuda()
+
+def collate_fn_test(batch) :
+    image = [x['image'] for x in batch]
+    label = [x['label'] for x in batch]
+
+    return torch.tensor(image).float().cuda(), label
+
 # Dataset, Dataloader 정의
 train_dataset = TrainDataset(args)
 test_dataset = TestDataset(args)
+train_data = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn)
+test_data = DataLoader(test_dataset, batch_size=1, shuffle=False, collate_fn=collate_fn_test)
+
+model = three_layer_conv_net()
+model.cuda()
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.wd)
+
+# set trainer
+trainer = Trainer(model, criterion, optimizer, args)
+
+#train
+if args.train:
+	trainer.fit(train_data)
+else:
+	model.load_state_dict(torch.load(args.model_dir + "epoch_{0:03}.pth".format(args.load_epoch)))
+
+trainer.test(test_data)
