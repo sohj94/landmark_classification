@@ -1,7 +1,7 @@
 # landmark_classification
 
-1. data/ 밑에 데이터셋 위치하게 하기
-2. src/train.py 를 실행해서 train 진행
+## 1. data/ 밑에 데이터셋 위치하게 하기
+## 2. src/train.py 를 실행해서 train 진행
 
   * --image_size: 학습시킬 이미지의 가로, 세로 길이 (default 256)	
   * --epochs: 학습시킬 epoch의 횟수 (default 100)
