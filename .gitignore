@@ -1,7 +1,7 @@
 ## Ignore File List ##
 data/public/test/
 data/public/train/
-src/__pycache__/
+**/__pycache__/
 .gitignore.swp
 data/public/sample_submission_exist.csv
 data/public/train_exist.csv
