@@ -2,8 +2,8 @@
 import pandas as pd
 import numpy as np
 import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 
 import argparse
 import torch
