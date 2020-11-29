@@ -5,3 +5,4 @@ src/__pycache__/
 .gitignore.swp
 data/public/sample_submission_exist.csv
 data/public/train_exist.csv
+data/ckpt/
