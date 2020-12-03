@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from torch import nn
+import time
 
 class Trainer:
 	def __init__(self, model, criterion, optimizer, args):
@@ -14,6 +15,7 @@ class Trainer:
 		for epoch in range(self.args.epochs):
 			epoch_loss = 0.
 			for iter, (image, label) in enumerate(train_data) :
+				tmp = time.time()
 				pred = self.model(image)
 				loss = self.criterion(input=pred, target=label)
 
@@ -21,6 +23,7 @@ class Trainer:
 				loss.backward()
 				self.optimizer.step()
 				epoch_loss += loss.detach().item()
+				print("Ran in {} seconds".format(time.time() - tmp))
 				print('epoch : {0} step : [{1}/{2}] loss : {3}'.format(epoch, iter, len(train_data), loss.detach().item()))
 			epoch_loss /= len(train_data)
 			print('\nepoch : {0} epoch loss : {1}\n'.format(epoch, epoch_loss))
