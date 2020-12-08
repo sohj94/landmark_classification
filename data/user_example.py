@@ -13,7 +13,7 @@ from PIL import Image
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 from torch import nn, optim
-from torch.nn import Conv2d, AdaptiveAvgPool2d, Linear
+from torch.nn import Conv2d, MaxPool2d, AdaptiveAvgPool2d, Linear
 import torch.nn.functional as F
 
 # arguments
@@ -115,7 +115,7 @@ class TestDataset(Dataset) :
         for i in tqdm(range(len(self.test_csv))) :
             filename = self.test_csv['id'][i]
             fullpath = glob(self.test_dir + "*/" + filename.replace('[', '[[]') + ".JPG")[0]
-            label = self.test_csv['id'][i]
+            label = self.test_csv['landmark_id'][i]
 
             self.test_csv_exist.loc[i,'id'] = fullpath
             self.test_image.append(fullpath)
@@ -126,7 +126,7 @@ class TestDataset(Dataset) :
         self.test_csv_exist = pd.read_csv(self.test_csv_exist_dir)
         for i in tqdm(range(len(self.test_csv_exist))) :
             fullpath = self.test_csv_exist['id'][i]
-            label = self.test_csv_exist['id'][i]
+            label = self.test_csv_exist['landmark_id'][i]
 
             self.test_image.append(fullpath)
             self.test_label.append(label)
@@ -181,7 +181,37 @@ class Network(nn.Module) :
         x = self.fc(x)
         return x
 
-model = Network()
+class alexnet(nn.Module) :
+    def __init__(self) :
+        super(alexnet, self).__init__()
+        self.conv1 = Conv2d(3, 96, (11,11), (4,4), (0,0))
+        self.conv2 = Conv2d(96, 256, (5,5), (1,1), (2,2))
+        self.conv3 = Conv2d(256, 384, (3,3), (1,1), (1,1))
+        self.conv4 = Conv2d(384, 384, (3,3), (1,1), (1,1))
+        self.conv5 = Conv2d(384, 256, (3,3), (1,1), (1,1))
+        self.fc1 = Linear(256, 4096)
+        self.fc2 = Linear(4096, 4096)
+        self.fc3 = Linear(4096, 1049)
+        self.mp1 = MaxPool2d((3,3), (2,2))
+        self.mp2 = MaxPool2d((3,3), (2,2))
+        self.mp3 = MaxPool2d((3,3), (2,2))
+
+    def forward(self, x) :
+        x = F.relu(self.conv1(x))
+        x = self.mp1(x)
+        x = F.relu(self.conv2(x))
+        x = self.mp2(x)
+        x = F.relu(self.conv3(x))
+        x = F.relu(self.conv4(x))
+        x = F.relu(self.conv5(x))
+        x = self.mp3(x)
+        x = AdaptiveAvgPool2d(1)(x).squeeze()
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+model = alexnet()
 model.cuda()
 
 criterion = nn.CrossEntropyLoss()
@@ -229,10 +259,10 @@ else :
     submission = pd.read_csv(args.test_csv_dir)
     for iter, (image, label) in enumerate(test_dataloader):
         pred = model(image)
-        pred = nn.Softmax(dim=1)(pred)
+        pred = nn.Softmax(dim=0)(pred)
         pred = pred.detach().cpu().numpy()
-        landmark_id = np.argmax(pred, axis=1)
-        confidence = pred[0,landmark_id]
+        landmark_id = np.argmax(pred, axis=0)
+        confidence = pred[landmark_id]
         submission.loc[iter, 'landmark_id'] = landmark_id
         submission.loc[iter, 'conf'] = confidence
     submission.to_csv(args.test_csv_submission_dir, index=False)
