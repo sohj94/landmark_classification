@@ -3,6 +3,6 @@ data/public/test/
 data/public/train/
 **/__pycache__/
 .gitignore.swp
-data/public/sample_submission_exist.csv
-data/public/train_exist.csv
-data/ckpt/
+data/ckpt/**
+*.csv
+src/runs/
