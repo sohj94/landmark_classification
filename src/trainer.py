@@ -28,7 +28,7 @@ class Trainer:
 			epoch_loss /= len(train_data)
 			print('\nepoch : {0} epoch loss : {1}\n'.format(epoch, epoch_loss))
 
-			torch.save(self.model.state_dict(), self.args.model_dir + "epoch_{0:03}.pth".format(epoch))
+			torch.save(self.model.state_dict(), self.args.model_dir + "epoch_{0:03}.pth".format(epoch+last_epoch))
 
 	def test(self, test_data):
 		self.model.eval()
